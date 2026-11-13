@@ -1,0 +1,18 @@
+{
+  "filename": "nghi_dinh_13_2023_nd_cp.pdf",
+  "document_id": "nd13-2023",
+  "title": "Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân",
+  "language": "Vietnamese",
+  "total_pages": 37,
+  "source_pdf": "13_2023_ND-CP.pdf",
+  "pdf_type": "scanned_image_pdf",
+  "ocr_required": true,
+  "ocr_engine": "Tesseract 5.x",
+  "ocr_languages": [
+    "vie",
+    "eng"
+  ],
+  "ocr_dpi": 300,
+  "content_pages_pdf": "1-30",
+  "appendix_pages_pdf": "31-37"
+}
