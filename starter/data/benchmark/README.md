@@ -1,7 +1,7 @@
 # RAG Benchmark – Nghị định 13/2023/NĐ-CP
 
 ## Corpus
-- PDF: `data/corpus/nghi_dinh_13_2023_nd_cp.pdf`
+- PDF: `data/corpus/13_2023_ND-CP.pdf`
 - 37 trang, scan dạng ảnh; OCR là bắt buộc.
 - Nội dung Nghị định: trang PDF 1–30; biểu mẫu phụ lục: trang PDF 31–37.
 - `gold_page` là số trang vật lý trong PDF, không phải số trang in trên Công báo.

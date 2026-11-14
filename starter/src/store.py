@@ -1,7 +1,7 @@
 """PostgreSQL + pgvector store for RAG chunks.
 
-The vector dimension is supplied by the embedding model, so this store works
-with EmbeddingGemma (768 dimensions by default) as well as other models.
+The vector dimension is supplied by the embedding model. The store validates
+an existing table's vector dimension and refuses unsafe model/schema mismatches.
 """
 from __future__ import annotations
 
@@ -79,6 +79,30 @@ class PgVectorStore:
             with conn.cursor() as cur:
                 for statement in statements:
                     cur.execute(statement)
+
+                # CREATE TABLE IF NOT EXISTS does not change an existing vector
+                # column. Detect a model switch (e.g. 768 -> 1536) explicitly.
+                cur.execute(
+                    """
+                    SELECT format_type(a.atttypid, a.atttypmod)
+                    FROM pg_attribute AS a
+                    WHERE a.attrelid = 'rag_chunks'::regclass
+                      AND a.attname = 'embedding'
+                      AND NOT a.attisdropped
+                    """
+                )
+                row = cur.fetchone()
+                actual_type = row[0] if row else None
+                expected_type = f"vector({self.dimensions})"
+                if actual_type != expected_type:
+                    raise RuntimeError(
+                        "pgvector schema dimension mismatch: "
+                        f"database has {actual_type}, but the selected embedding "
+                        f"model requires {expected_type}. Existing vectors from "
+                        "different models cannot be mixed. Back up if needed, then "
+                        "run `DROP TABLE rag_chunks;` and rerun the pipeline to "
+                        "recreate and re-embed the corpus."
+                    )
 
     def upsert(
         self,

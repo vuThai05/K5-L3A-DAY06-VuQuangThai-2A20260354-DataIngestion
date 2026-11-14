@@ -1,0 +1,92 @@
+{
+  "A": {
+    "dev": {
+      "questions": 15,
+      "hit_at_1": {
+        "count": 10,
+        "total": 15,
+        "rate": 0.6666666666666666
+      },
+      "evidence_hit_at_3": {
+        "count": 13,
+        "total": 15,
+        "rate": 0.8666666666666667
+      },
+      "manual_review_required": 4
+    },
+    "test": {
+      "questions": 5,
+      "hit_at_1": {
+        "count": 2,
+        "total": 5,
+        "rate": 0.4
+      },
+      "evidence_hit_at_3": {
+        "count": 4,
+        "total": 5,
+        "rate": 0.8
+      },
+      "manual_review_required": 2
+    }
+  },
+  "B": {
+    "dev": {
+      "questions": 15,
+      "hit_at_1": {
+        "count": 12,
+        "total": 15,
+        "rate": 0.8
+      },
+      "evidence_hit_at_3": {
+        "count": 13,
+        "total": 15,
+        "rate": 0.8666666666666667
+      },
+      "manual_review_required": 4
+    },
+    "test": {
+      "questions": 5,
+      "hit_at_1": {
+        "count": 5,
+        "total": 5,
+        "rate": 1.0
+      },
+      "evidence_hit_at_3": {
+        "count": 5,
+        "total": 5,
+        "rate": 1.0
+      },
+      "manual_review_required": 2
+    }
+  },
+  "C": {
+    "dev": {
+      "questions": 15,
+      "hit_at_1": {
+        "count": 13,
+        "total": 15,
+        "rate": 0.8666666666666667
+      },
+      "evidence_hit_at_3": {
+        "count": 15,
+        "total": 15,
+        "rate": 1.0
+      },
+      "manual_review_required": 6
+    },
+    "test": {
+      "questions": 5,
+      "hit_at_1": {
+        "count": 5,
+        "total": 5,
+        "rate": 1.0
+      },
+      "evidence_hit_at_3": {
+        "count": 5,
+        "total": 5,
+        "rate": 1.0
+      },
+      "manual_review_required": 1
+    }
+  }
+}

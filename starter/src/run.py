@@ -75,9 +75,9 @@ def _chunk_pages(pages, strategy: str, size: int, overlap: int):
 
 
 def _embed_and_upsert(store, embedder, strategy: str, chunks, batch_size: int = 64):
+    """Embed a strategy once, persist it, and return vectors for safe reuse."""
     started = time.perf_counter()
     store.create_schema()
-    # Use a single complete document batch for the store's replace semantics.
     all_vectors = []
     for start in range(0, len(chunks), batch_size):
         batch = chunks[start:start + batch_size]
@@ -85,7 +85,16 @@ def _embed_and_upsert(store, embedder, strategy: str, chunks, batch_size: int = 
     if len(all_vectors) != len(chunks):
         raise RuntimeError(f"{strategy}: embedding count does not match chunk count")
     store.upsert(strategy, chunks, all_vectors)
-    return time.perf_counter() - started
+    return time.perf_counter() - started, all_vectors
+
+
+def _upsert_existing_vectors(store, strategy: str, chunks, vectors):
+    """Persist an identical chunk set under another strategy without API calls."""
+    if len(chunks) != len(vectors):
+        raise RuntimeError(
+            f"{strategy}: cannot reuse vectors; chunk/vector counts differ."
+        )
+    store.upsert(strategy, chunks, vectors)
 
 
 def _write_json(path: Path, payload: Any):
@@ -150,7 +159,7 @@ def main() -> None:
 
     if not args.corpus.is_file():
         raise FileNotFoundError(
-            f"Corpus not found: {args.corpus}. Put the PDF at data/corpus/nghi_dinh_13_2023_nd_cp.pdf"
+            f"Corpus not found: {args.corpus}. Put the PDF at data/corpus/13_2023_ND-CP.pdf"
         )
     if not args.benchmark.is_file():
         raise FileNotFoundError(
@@ -187,8 +196,18 @@ def main() -> None:
     store = PgVectorStore(database_url=database_url, dimensions=embedder.dimensions)
     store.create_schema()
 
+    print(
+        f"Embedding provider={getattr(embedder, 'provider', 'unknown')} | "
+        f"model={embedder.model_name} | dimensions={embedder.dimensions}"
+    )
+    print(f"Corpus pages: {len(pages)} | non-empty pages: {len(content_pages)}")
+
     all_traces = []
     metrics = {}
+    # A and B need their own vectors. C is defined as B + metadata filtering,
+    # so C must reuse B's vectors rather than calling the embedding API again.
+    strategy_vectors = {}
+    query_vectors = {}
     experiment = {
         "corpus": str(args.corpus),
         "benchmark": str(args.benchmark),
@@ -203,7 +222,8 @@ def main() -> None:
         "content_pages": len(content_pages),
         "strategies": {},
         "notes": [
-            "C reuses B chunks and differs only by metadata filtering.",
+            "C reuses B chunks and B document vectors; no duplicate document embedding API calls.",
+            "Question embeddings are cached and reused across A/B/C.",
             "C applies question.filter only when present; no-filter questions run unfiltered.",
             "Legal metadata (chapter/article) is parsed from source text, never copied from question gold metadata.",
             "Automatic evidence hit requires exact normalized evidence_quote within a chunk on a gold source/page.",
@@ -214,9 +234,23 @@ def main() -> None:
     for strategy in ("A", "B", "C"):
         chunk_strategy = "A" if strategy == "A" else "B"
         chunks = _chunk_pages(pages, chunk_strategy, args.chunk_size, args.overlap)
-        # Strategy C stores a separate namespace, but embeds exactly the same B chunks.
-        if args.rebuild or strategy in ("A", "B", "C"):
-            elapsed = _embed_and_upsert(store, embedder, strategy, chunks)
+
+        if strategy == "C":
+            # C has exactly B's chunks and vectors; only retrieval filtering differs.
+            b_chunks = _chunk_pages(pages, "B", args.chunk_size, args.overlap)
+            if len(b_chunks) != len(chunks) or any(
+                left.chunk_id != right.chunk_id or left.text != right.text
+                for left, right in zip(b_chunks, chunks)
+            ):
+                raise RuntimeError("Strategy C chunks differ from B; vector reuse is unsafe.")
+            elapsed_start = time.perf_counter()
+            _upsert_existing_vectors(store, "C", chunks, strategy_vectors["B"])
+            elapsed = time.perf_counter() - elapsed_start
+            strategy_vectors["C"] = strategy_vectors["B"]
+        else:
+            elapsed, vectors = _embed_and_upsert(store, embedder, strategy, chunks)
+            strategy_vectors[strategy] = vectors
+
         experiment["strategies"][strategy] = {
             "chunking": "fixed_size" if strategy == "A" else "legal_article_clause_aware",
             "chunks": len(chunks),
@@ -228,7 +262,10 @@ def main() -> None:
 
         strategy_traces = []
         for question in questions:
-            query_vector = embedder.embed_query(question["question"])
+            question_text = question["question"]
+            if question_text not in query_vectors:
+                query_vectors[question_text] = embedder.embed_query(question_text)
+            query_vector = query_vectors[question_text]
             filters = question.get("filter") if strategy == "C" else None
             hits = store.search(
                 strategy=strategy,

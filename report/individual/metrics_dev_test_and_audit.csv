@@ -1,0 +1,7 @@
+﻿strategy,split,hit_at_1,hit_at_1_pct,evidence_hit_at_3,evidence_hit_at_3_pct,chunk_count,coherence_mean_0_2,coherence_n_chunks,metadata_correct,grounding_0_1_2,grounding_mean_0_2,filter_compliant_questions,audit_records,ingest_embed_seconds,declared_cost_usd
+A,dev,10/15,66.67,13/15,86.67,94,0.577,26,N/A (audit test only),N/A (audit test only),,N/A,0,6.39,0
+A,test,2/5,40.0,4/5,80.0,94,0.577,26,10/15,5/7/3,0.867,1/5,15,6.39,0
+B,dev,12/15,80.0,13/15,86.67,119,0.969,32,N/A (audit test only),N/A (audit test only),,N/A,0,1.765,0
+B,test,5/5,100.0,5/5,100.0,119,0.969,32,13/15,1/10/4,1.2,2/5,15,1.765,0
+C,dev,13/15,86.67,15/15,100.0,119,0.969,32,N/A (audit test only),N/A (audit test only),,N/A,0,0.105,0
+C,test,5/5,100.0,5/5,100.0,119,0.969,32,12/13,0/9/4,1.308,5/5,13,0.105,0
