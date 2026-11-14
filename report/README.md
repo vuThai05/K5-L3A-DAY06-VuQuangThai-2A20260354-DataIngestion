@@ -1,4 +1,4 @@
-# Hồ sơ báo cáo Day 6 — Nghị định 13/2023/NĐ-CP
+# Hồ sơ báo cáo Day 6
 
 Bộ hồ sơ gồm đúng 6 file:
 
